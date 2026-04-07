@@ -4,11 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "backend": "python -m uvicorn backend.app:app --reload --port 8000",
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
+    "stats-agent": "python -m checkwise_stats.cli",
     "test": "vitest run",
     "test:watch": "vitest"
   },
