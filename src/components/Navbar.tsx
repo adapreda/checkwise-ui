@@ -1,15 +1,16 @@
 import { Link, useLocation } from "react-router-dom";
-import { Sun, Moon, Menu, X, User, LogOut } from "lucide-react";
+import { Sun, Moon, Menu, X, Mail, LogOut } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface NavbarProps {
   isLoggedIn: boolean;
+  userEmail?: string;
   onLogout: () => void;
 }
 
-const Navbar = ({ isLoggedIn, onLogout }: NavbarProps) => {
+const Navbar = ({ isLoggedIn, userEmail, onLogout }: NavbarProps) => {
   const { isDark, toggle } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
@@ -60,13 +61,19 @@ const Navbar = ({ isLoggedIn, onLogout }: NavbarProps) => {
           </button>
 
           {isLoggedIn ? (
-            <button
-              onClick={onLogout}
-              className="hidden items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground md:flex"
-            >
-              <LogOut size={14} />
-              Logout
-            </button>
+            <>
+              <div className="hidden items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm text-muted-foreground md:flex">
+                <Mail size={14} className="text-primary" />
+                <span className="max-w-[220px] truncate">{userEmail ?? "Signed in"}</span>
+              </div>
+              <button
+                onClick={onLogout}
+                className="hidden items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground md:flex"
+              >
+                <LogOut size={14} />
+                Logout
+              </button>
+            </>
           ) : (
             <Link
               to="/login"
@@ -108,9 +115,14 @@ const Navbar = ({ isLoggedIn, onLogout }: NavbarProps) => {
                 </Link>
               ))}
               {isLoggedIn ? (
-                <button onClick={() => { onLogout(); setMobileOpen(false); }} className="rounded-md px-3 py-2 text-left text-sm font-medium text-muted-foreground">
-                  Logout
-                </button>
+                <>
+                  <div className="rounded-md border border-border bg-card px-3 py-2 text-sm text-muted-foreground">
+                    {userEmail ?? "Signed in"}
+                  </div>
+                  <button onClick={() => { onLogout(); setMobileOpen(false); }} className="rounded-md px-3 py-2 text-left text-sm font-medium text-muted-foreground">
+                    Logout
+                  </button>
+                </>
               ) : (
                 <Link to="/login" onClick={() => setMobileOpen(false)} className="rounded-md bg-primary px-3 py-2 text-center text-sm font-semibold text-primary-foreground">
                   Login

@@ -2,10 +2,12 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import AnimatedBackground from "@/components/AnimatedBackground";
+import type { AuthUser } from "@/App";
 
 interface AuthPageProps {
   mode: "login" | "register";
-  onLogin: () => void;
+  onLogin: (user: AuthUser) => void;
 }
 
 const AuthPage = ({ mode, onLogin }: AuthPageProps) => {
@@ -19,17 +21,21 @@ const AuthPage = ({ mode, onLogin }: AuthPageProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin();
+    onLogin({
+      email: email.trim(),
+      name: name.trim() || undefined,
+    });
     navigate("/checker");
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex min-h-screen items-center justify-center px-4 pt-16">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 pt-16">
+      <AnimatedBackground />
       <motion.div
         initial={{ opacity: 0, y: 30, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.4 }}
-        className="w-full max-w-sm rounded-lg border border-border bg-card p-6"
+        className="relative z-10 w-full max-w-sm rounded-lg border border-border bg-card/95 p-6 backdrop-blur-sm"
       >
         <div className="mb-6 text-center">
           <h1 className="text-xl font-bold">{isLogin ? "Welcome Back" : "Create Account"}</h1>

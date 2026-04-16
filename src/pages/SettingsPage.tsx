@@ -1,8 +1,13 @@
 import { motion } from "framer-motion";
 import { useTheme } from "@/hooks/useTheme";
 import { Sun, Moon, User } from "lucide-react";
+import type { AuthUser } from "@/App";
 
-const SettingsPage = () => {
+interface SettingsPageProps {
+  user: AuthUser | null;
+}
+
+const SettingsPage = ({ user }: SettingsPageProps) => {
   const { isDark, toggle } = useTheme();
 
   return (
@@ -19,14 +24,14 @@ const SettingsPage = () => {
             <div>
               <label className="mb-1 block text-xs text-muted-foreground">Name</label>
               <input
-                defaultValue="Alex Student"
+                defaultValue={user?.name ?? "Alex Student"}
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
             </div>
             <div>
               <label className="mb-1 block text-xs text-muted-foreground">Email</label>
               <input
-                defaultValue="alex@checkwise.io"
+                defaultValue={user?.email ?? "alex@checkwise.io"}
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
             </div>

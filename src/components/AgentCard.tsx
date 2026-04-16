@@ -21,9 +21,10 @@ interface AgentCardProps {
   index: number;
   isOpen: boolean;
   onToggle: () => void;
+  modalContent?: React.ReactNode;
 }
 
-const AgentCard = ({ agent, index, isOpen, onToggle }: AgentCardProps) => {
+const AgentCard = ({ agent, index, isOpen, onToggle, modalContent }: AgentCardProps) => {
   return (
     <>
       <motion.div
@@ -36,21 +37,22 @@ const AgentCard = ({ agent, index, isOpen, onToggle }: AgentCardProps) => {
         <div className={`mb-3 inline-flex rounded-md bg-gradient-to-br ${agent.color} p-2.5 text-primary-foreground`}>
           {iconMap[agent.icon]}
         </div>
-        <h3 className="mb-1 text-sm font-semibold">{agent.name}</h3>
-        <p className="text-xs text-muted-foreground">{agent.description}</p>
+        <h3 className="mb-2 text-sm font-semibold leading-snug">{agent.name}</h3>
+        <p className="text-xs leading-relaxed text-muted-foreground">{agent.description}</p>
       </motion.div>
 
-      <Dialog open={isOpen} onOpenChange={onToggle}>
-        <DialogContent className="border-border bg-card">
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onToggle()}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto border-border bg-card sm:max-w-xl">
           <DialogHeader>
             <div className={`mb-3 inline-flex w-fit rounded-md bg-gradient-to-br ${agent.color} p-3 text-primary-foreground`}>
               {iconMap[agent.icon]}
             </div>
             <DialogTitle>{agent.name}</DialogTitle>
-            <DialogDescription className="text-sm leading-relaxed text-muted-foreground">
+            <DialogDescription className="max-w-none text-sm leading-7 text-muted-foreground">
               {agent.details}
             </DialogDescription>
           </DialogHeader>
+          {modalContent}
         </DialogContent>
       </Dialog>
     </>
