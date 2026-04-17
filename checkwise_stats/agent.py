@@ -14,7 +14,7 @@ from statsmodels.stats.weightstats import DescrStatsW
 
 from .state import ParsedRequest, StatisticalAgentState
 
-DEFAULT_STATISTICAL_MODEL = os.getenv("CHECKWISE_STATS_MODEL", "gpt-oss:20b-cloud")
+DEFAULT_STATISTICAL_MODEL = os.getenv("CHECKWISE_STATS_MODEL", "llama3.2:1b")
 DEFAULT_STATISTICAL_OLLAMA_BASE_URL = os.getenv(
     "CHECKWISE_STATS_OLLAMA_BASE_URL",
     "http://localhost:11434",

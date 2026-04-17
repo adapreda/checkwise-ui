@@ -21,7 +21,7 @@ WHITESPACE_PATTERN = re.compile(r"\s+")
 BULLET_PATTERN = re.compile(r"^\s*(?:[-*]|\d+[.)])\s+", re.MULTILINE)
 QUOTE_PATTERN = re.compile(r'^[\s>"\']+', re.MULTILINE)
 
-DEFAULT_TEXT_MODEL = os.getenv("CHECKWISE_TEXT_MODEL", os.getenv("CHECKWISE_STATS_MODEL", "gpt-oss:20b-cloud"))
+DEFAULT_TEXT_MODEL = os.getenv("CHECKWISE_TEXT_MODEL", os.getenv("CHECKWISE_STATS_MODEL", "llama3.2:1b"))
 DEFAULT_TEXT_OLLAMA_BASE_URL = os.getenv(
     "CHECKWISE_TEXT_OLLAMA_BASE_URL",
     os.getenv("CHECKWISE_STATS_OLLAMA_BASE_URL", "http://localhost:11434"),

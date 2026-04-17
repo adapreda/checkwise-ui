@@ -33,12 +33,17 @@ def init_db() -> None:
                 verification_rating TEXT NOT NULL,
                 statistical_percentage INTEGER NOT NULL,
                 confidence TEXT NOT NULL,
+                explanation TEXT,
                 structured_result_json TEXT NOT NULL,
                 created_at TEXT NOT NULL
             )
             """
         )
-
+        if not _column_exists(connection, "verification_history", "explanation"):
+            connection.execute("ALTER TABLE verification_history ADD COLUMN explanation TEXT")
+            connection.execute(
+                "UPDATE verification_history SET explanation = '' WHERE explanation IS NULL"
+            )
         if not _column_exists(connection, "verification_history", "structured_result_json"):
             connection.execute("ALTER TABLE verification_history ADD COLUMN structured_result_json TEXT")
             connection.execute(
