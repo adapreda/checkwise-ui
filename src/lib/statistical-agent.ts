@@ -68,6 +68,13 @@ export interface DetectorDetails {
   diagnostic_timestamp?: string | null;
 }
 
+export interface GrammaticalResult {
+  score: number;
+  confidence: "low" | "medium" | "high";
+  reasons_for_rating: string[];
+  lowered_confidence_reasons: string[];
+}
+
 export interface TextVerificationResponse {
   title: string;
   verification_title: string;
@@ -88,6 +95,7 @@ export interface TextVerificationResponse {
   detector_details: DetectorDetails;
   highlights: Highlight[];
   metrics: TextAnalysisMetrics;
+  grammatical_result: GrammaticalResult;
 }
 
 export interface HistoryEntry {

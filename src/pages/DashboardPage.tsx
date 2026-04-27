@@ -1,11 +1,28 @@
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar, Percent, FileText } from "lucide-react";
-import { fetchHistory } from "@/lib/statistical-agent";
+import { fetchHistory, type HistoryEntry } from "@/lib/statistical-agent";
 
 interface DashboardPageProps {
   userEmail?: string;
 }
+
+const clampPercentage = (score: number) => Math.max(0, Math.min(100, Math.round(score)));
+
+const formatGrammaticalHistoryScore = (item: HistoryEntry) => {
+  const grammaticalResult = item.structured_result?.grammatical_result;
+  if (!grammaticalResult) {
+    return "Not available";
+  }
+
+  const isAiVerdict = item.structured_result?.verdict === "likely AI-generated";
+  const displayedScore = isAiVerdict
+    ? grammaticalResult.score
+    : 100 - grammaticalResult.score;
+  const displayedLabel = isAiVerdict ? "AI-written" : "human-written";
+
+  return `${clampPercentage(displayedScore)}% ${displayedLabel} (${grammaticalResult.confidence})`;
+};
 
 const DashboardPage = ({ userEmail }: DashboardPageProps) => {
   const historyQuery = useQuery({
@@ -63,34 +80,35 @@ const DashboardPage = ({ userEmail }: DashboardPageProps) => {
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Preview</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Rating</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Statistical Agent</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Grammatical Agent</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Timestamp</th>
                 </tr>
               </thead>
               <tbody>
                 {!userEmail && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
+                    <td colSpan={7} className="px-4 py-6 text-center text-muted-foreground">
                       Sign in to view your search history.
                     </td>
                   </tr>
                 )}
                 {userEmail && historyQuery.isLoading && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
+                    <td colSpan={7} className="px-4 py-6 text-center text-muted-foreground">
                       Loading history...
                     </td>
                   </tr>
                 )}
                 {userEmail && historyQuery.isError && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-destructive">
+                    <td colSpan={7} className="px-4 py-6 text-center text-destructive">
                       {historyQuery.error.message}
                     </td>
                   </tr>
                 )}
                 {userEmail && !historyQuery.isLoading && !historyQuery.isError && history.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
+                    <td colSpan={7} className="px-4 py-6 text-center text-muted-foreground">
                       No text verification searches have been stored yet.
                     </td>
                   </tr>
@@ -102,6 +120,7 @@ const DashboardPage = ({ userEmail }: DashboardPageProps) => {
                     <td className="max-w-[280px] truncate px-4 py-3">{item.text_preview}</td>
                     <td className="px-4 py-3">{item.verification_rating}</td>
                     <td className="px-4 py-3">{item.statistical_percentage}% ({item.confidence})</td>
+                    <td className="px-4 py-3">{formatGrammaticalHistoryScore(item)}</td>
                     <td className="px-4 py-3 text-muted-foreground">{new Date(item.created_at).toLocaleString()}</td>
                   </tr>
                 ))}

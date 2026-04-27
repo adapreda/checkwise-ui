@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -89,6 +89,13 @@ class DetectorDetailsResponse(BaseModel):
     diagnostic_timestamp: str | None = None
 
 
+class GrammaticalResultResponse(BaseModel):
+    score: int = Field(ge=0, le=100)
+    confidence: Literal["low", "medium", "high"]
+    reasons_for_rating: list[str]
+    lowered_confidence_reasons: list[str]
+
+
 class TextVerificationResponse(BaseModel):
     title: str
     verification_title: str
@@ -109,6 +116,7 @@ class TextVerificationResponse(BaseModel):
     detector_details: DetectorDetailsResponse
     highlights: list[HighlightResponse]
     metrics: TextAnalysisMetricsResponse
+    grammatical_result: GrammaticalResultResponse
 
 
 class HistoryEntry(BaseModel):

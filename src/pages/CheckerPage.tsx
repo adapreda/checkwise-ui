@@ -16,6 +16,53 @@ const formatVisibleVerdictLabel = (result: TextVerificationResponse) =>
     ? `${result.percentage}% likely AI-written`
     : `${result.percentage}% likely human-written`;
 
+const clampPercentage = (score: number) => Math.max(0, Math.min(100, Math.round(score)));
+
+const formatGrammaticalVerdictLabel = (result: TextVerificationResponse) =>
+  result.verdict === "likely AI-generated"
+    ? `${clampPercentage(result.grammatical_result.score)}% likely AI-written`
+    : `${clampPercentage(100 - result.grammatical_result.score)}% likely human-written`;
+
+interface GrammaticalSignalSpan {
+  start: number;
+  end: number;
+  reason: string;
+}
+
+const buildGrammaticalSignalSpans = (value: string): GrammaticalSignalSpan[] => {
+  const spans: GrammaticalSignalSpan[] = [];
+
+  const addMatches = (pattern: RegExp, reason: string) => {
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(value)) !== null && spans.length < 8) {
+      const start = match.index;
+      const end = start + match[0].length;
+      if (end > start) {
+        spans.push({ start, end, reason });
+      }
+    }
+  };
+
+  addMatches(/\s+[,.!?;:]/g, "Spacing appears before punctuation.");
+  addMatches(/[,.!?;:](?=\S)/g, "Punctuation is followed by no space.");
+  addMatches(/\s{2,}/g, "Repeated spacing affects formatting consistency.");
+  addMatches(/\n{3,}/g, "Large blank gaps affect formatting consistency.");
+  addMatches(/\b\w*(?:aaa|eee|iii|ooo|uuu)\w*\b/gi, "Repeated letters may indicate informal or typo-like wording.");
+
+  const filteredSpans: GrammaticalSignalSpan[] = [];
+  let cursor = 0;
+  [...spans]
+    .sort((a, b) => a.start - b.start)
+    .forEach((span) => {
+      if (span.start >= cursor) {
+        filteredSpans.push(span);
+        cursor = span.end;
+      }
+    });
+
+  return filteredSpans;
+};
+
 interface CheckerPageProps {
   userEmail?: string;
 }
@@ -169,6 +216,46 @@ const CheckerPage = ({ userEmail }: CheckerPageProps) => {
   const visibleVerdictLabel = textVerificationMutation.data
     ? formatVisibleVerdictLabel(textVerificationMutation.data)
     : null;
+  const grammaticalVerdictLabel = textVerificationMutation.data
+    ? formatGrammaticalVerdictLabel(textVerificationMutation.data)
+    : null;
+  const grammaticalResult = textVerificationMutation.data?.grammatical_result ?? null;
+  const grammaticalHighlightedText = useMemo(() => {
+    if (!grammaticalResult) {
+      return null;
+    }
+
+    const spans = buildGrammaticalSignalSpans(text);
+    if (spans.length === 0) {
+      return [text];
+    }
+
+    const nodes: ReactNode[] = [];
+    let cursor = 0;
+
+    spans.forEach((span, index) => {
+      if (span.start > cursor) {
+        nodes.push(<span key={`grammar-plain-${index}-${cursor}`}>{text.slice(cursor, span.start)}</span>);
+      }
+
+      nodes.push(
+        <mark
+          key={`grammar-highlight-${index}-${span.start}`}
+          className="rounded bg-cyan-500/20 px-0.5 text-foreground"
+          title={span.reason}
+        >
+          {text.slice(span.start, span.end)}
+        </mark>,
+      );
+      cursor = span.end;
+    });
+
+    if (cursor < text.length) {
+      nodes.push(<span key={`grammar-plain-final-${cursor}`}>{text.slice(cursor)}</span>);
+    }
+
+    return nodes;
+  }, [text, grammaticalResult]);
 
   const statisticalAgentModalContent = textVerificationMutation.data ? (
     <div className="space-y-4">
@@ -289,6 +376,47 @@ const CheckerPage = ({ userEmail }: CheckerPageProps) => {
       <div className="rounded-lg border border-border bg-background/40 p-4">
         <h3 className="mb-3 text-sm font-semibold text-foreground">Highlighted Signals In The Original Text</h3>
         <div className="whitespace-pre-wrap text-sm leading-7 text-foreground">{highlightedText}</div>
+      </div>
+    </div>
+  ) : null;
+
+  const grammaticalAgentModalContent = grammaticalResult ? (
+    <div className="space-y-4">
+      <div className="rounded-lg border border-border bg-background/40 p-4">
+        <h2 className="mb-2 text-base font-semibold text-foreground">Grammatical Verification Result</h2>
+        <p className="text-sm text-muted-foreground">
+          Result: <span className="font-semibold text-foreground">{grammaticalVerdictLabel}</span>
+        </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Confidence: <span className="font-semibold text-foreground">{grammaticalResult.confidence}</span>
+        </p>
+      </div>
+
+      <div className="rounded-lg border border-border bg-background/40 p-4">
+        <h3 className="mb-3 text-sm font-semibold text-foreground">Why this text received this rating</h3>
+        <div className="space-y-2 text-sm leading-7 text-muted-foreground">
+          {grammaticalResult.reasons_for_rating.map((reason, index) => (
+            <p key={`${reason}-${index}`}>- {reason}</p>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border bg-background/40 p-4">
+        <h3 className="mb-3 text-sm font-semibold text-foreground">What lowered confidence</h3>
+        <div className="space-y-2 text-sm leading-7 text-muted-foreground">
+          {grammaticalResult.lowered_confidence_reasons.length > 0 ? (
+            grammaticalResult.lowered_confidence_reasons.map((item, index) => (
+              <p key={`${item}-${index}`}>- {item}</p>
+            ))
+          ) : (
+            <p>- No major confidence reducers were reported.</p>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border bg-background/40 p-4">
+        <h3 className="mb-3 text-sm font-semibold text-foreground">Highlighted Signals In The Original Text</h3>
+        <div className="whitespace-pre-wrap text-sm leading-7 text-foreground">{grammaticalHighlightedText}</div>
       </div>
     </div>
   ) : null;
@@ -416,7 +544,13 @@ const CheckerPage = ({ userEmail }: CheckerPageProps) => {
               index={i}
               isOpen={openAgent === agent.id}
               onToggle={() => setOpenAgent(openAgent === agent.id ? null : agent.id)}
-              modalContent={agent.id === "statistic" ? statisticalAgentModalContent : undefined}
+              modalContent={
+                agent.id === "statistic"
+                  ? statisticalAgentModalContent
+                  : agent.id === "grammatical"
+                    ? grammaticalAgentModalContent
+                    : undefined
+              }
             />
           ))}
         </div>
@@ -449,6 +583,18 @@ const CheckerPage = ({ userEmail }: CheckerPageProps) => {
                   Open the <span className="font-semibold text-foreground">Statistic Agent</span> card above to view the full analysis details.
                 </p>
               </div>
+
+              {grammaticalResult && (
+                <div className="rounded-lg border border-border bg-card p-5">
+                  <h2 className="mb-2 text-lg font-semibold">Grammatical Verification Result</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Result: <span className="font-semibold text-foreground">{grammaticalVerdictLabel}</span>
+                  </p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Open the <span className="font-semibold text-foreground">Grammatical Agent</span> card above to view the full analysis details.
+                  </p>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
