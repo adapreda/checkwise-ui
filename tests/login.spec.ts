@@ -1,79 +1,22 @@
-name: CI/CD Pipeline
+import { test, expect } from '@playwright/test';
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+test('Utilizatorul se poate loga cu succes', async ({ page }) => {
+  // 1. Mergem pe pagina de login
+  await page.goto('http://localhost:8080/login');
 
-jobs:
-  release:
-    name: Test and Build Release
-    runs-on: ubuntu-latest
+  // 2. Completăm datele de test predefinite pentru login
+  await page.fill('input[type="email"]', 'test@checkwise.ro');
+  await page.fill('input[type="password"]', 'ParolaTest123!');
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  // 3. Apăsăm pe butonul de Login
+  await page.click('button[type="submit"]');
 
-      # --- BACKEND SETUP & TESTS ---
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install backend dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-statistical-agent.txt
-          pip install fastapi uvicorn pytest  # Ne asigurăm că avem și serverul de test
-
-      - name: Run backend tests
-        run: pytest backend/tests
-
-      # --- FRONTEND SETUP ---
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: npm
-
-      - name: Install frontend dependencies
-        run: npm ci
-
-      # --- E2E PLAYWRIGHT TESTS ---
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
-
-      - name: Start services in background
-        run: |
-          # Pornim backend-ul pe portul 8000
-          python -m uvicorn backend.app:app --port 8000 &
-          # Pornim frontend-ul în mod development/preview
-          npm run dev &
-          # Așteptăm să fie ambele gata
-          sleep 5
-
-      - name: Run Playwright E2E Login Tests
-        run: npx playwright test tests/login.spec.ts
-
-      # --- BUILD & RELEASE (rulează doar dacă testele trec) ---
-      - name: Build frontend
-        run: npm run build
-
-      - name: Create release folder
-        run: |
-          mkdir -p release/backend release/checkwise_stats
-          cp backend/*.py release/backend/
-          cp checkwise_stats/*.py release/checkwise_stats/
-          cp -R dist release/frontend-dist
-          cp requirements-statistical-agent.txt release/
-          cp package.json package-lock.json release/
-          cp README.md release/
-
-      - name: Upload release artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: application-release
-          path: release
+  // 4. Verificăm redirecționarea după succes
+  await expect(page).toHaveURL('http://localhost:8080/checker'); 
+  
+  // Opțional: Verificăm un element vizual de confirmare a stării de logat
+  const welcomeMessage = page.locator('#welcome-user');
+  if (await welcomeMessage.count() > 0) {
+    await expect(welcomeMessage).toBeVisible();
+  }
+});
