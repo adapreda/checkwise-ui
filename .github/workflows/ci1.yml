@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-statistical-agent.txt
+
+      - name: Run backend tests
+        env:
+          PYTHONPATH: .
+        run: pytest backend/tests
+
+  frontend:
+    name: Frontend build & E2E Login Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Instalează Python și pornește backend-ul necesar pentru testul de login
+      - name: Set up Python (for E2E)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend dependencies (for E2E)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-statistical-agent.txt
+          pip install fastapi uvicorn
+
+      # Configurare Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      # Instalare browsere Playwright
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      # Pornire servicii în fundal și rulare test login
+      - name: Run E2E Login Tests
+        env:
+          PYTHONPATH: .
+        run: |
+          # Pornim backend-ul pe portul 8000
+          python -m uvicorn backend.app:app --port 8000 &
+          # Pornim frontend-ul (asigurăm portul 8080 pentru testul tău)
+          npm run dev -- --port 8080 &
+          # Așteptăm pornirea serviciilor
+          sleep 5
+          # Rulăm testul de login
+          npx playwright test tests/login.spec.ts
