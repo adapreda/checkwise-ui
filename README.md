@@ -65,4 +65,9 @@ The CI workflow is located in `.github/workflows/ci.yml`. It runs on every push 
 
 The CD workflow is located in `.github/workflows/cd.yml`. It runs on every push to `main`. The workflow repeats the backend validation, builds the frontend, creates a release folder, and uploads it as a GitHub Actions artifact named `application-release`.
 
-For the university demo, this satisfies the MDS CI/CD requirement because the project automatically validates backend tests and frontend build on code changes, and it produces a downloadable delivery artifact from the `main` branch AAA.
+For the university demo, this satisfies the MDS CI/CD requirement because the project automatically validates backend tests and frontend build on code changes, and it produces a downloadable delivery artifact from the `main` branch .
+
+
+
+COME ON
+
