@@ -1,0 +1,32 @@
+# Raport despre folosirea tool-urilor de AI în dezvoltarea CheckWise
+
+Pentru CheckWise am folosit AI-ul în aproape toate etapele proiectului: de la alegerea arhitecturii și împărțirea pe agenți, până la implementare, debugging și verificarea rezultatelor. Ideea proiectului se potrivea natural cu cerința de la laborator, pentru că aplicația nu folosește AI doar ca ajutor în dezvoltare, ci are și agenți AI integrați direct în funcționalitatea ei.
+
+Cel mai folosit tool în timpul dezvoltării a fost **Codex**. Practic, Codex a generat aproape tot codul aplicației: componentele din frontend, integrarea cu backend-ul, endpoint-urile FastAPI, logica de salvare în istoric, structura răspunsurilor și integrarea agenților. Noi am folosit Codex, mai ales, în mod iterativ: îi ceream o funcționalitate, rulam aplicația, verificam rezultatul, apoi reveneam cu erori, cazuri neacoperite sau ajustări de UX. În felul acesta, AI-ul a fost folosit ca pair programmer, nu doar ca generator de bucăți izolate de cod.
+
+Un exemplu important este partea de analiză multi-agent. Pentru aplicație am ajuns la o structură cu mai mulți agenți specializați:
+
+- **Statistic Agent**, care analizează textul din punct de vedere stilistic și statistic: lungimea propozițiilor, repetiții, expresii recurente, regularitatea formulărilor și scorul general de probabilitate AI.
+- **Grammatical Agent**, care verifică semnale legate de gramatică, punctuație, consistența formatării și nivelul de „polish” al textului.
+- **Fact-Checking Agent**, care extrage afirmații factuale, caută dovezi și calculează un scor de încredere factuală.
+- **Master Agent**, care combină rezultatele celorlalți agenți și produce verdictul final.
+
+Pentru agenții care rulează local am folosit **Ollama**, în special prin modele de tip `llama3.2` / `llama3.2:1b`. A fost util pentru că ne-a permis să avem agenți care pot rula local, fără să depindem complet de un serviciu extern. În același timp, am păstrat fallback-uri și validări, deoarece modelele locale pot returna uneori răspunsuri incomplete, JSON invalid sau explicații prea generale.
+
+Pentru agentul de fact-checking am folosit și servicii externe. **Gemini API** este folosit pentru partea de interpretare: extragerea afirmațiilor factuale și evaluarea lor pe baza dovezilor disponibile. **Tavily Search** este folosit pentru căutarea surselor externe, pe baza cheii API configurate pentru proiect. Am ales această combinație deoarece fact-checking-ul are nevoie atât de un model care poate înțelege afirmațiile din text, cât și de acces la surse actuale sau verificabile. În plus, în cod se gestionează situația în care cheile API lipsesc sau un serviciu extern eșuează, ca aplicația să nu se oprească complet.
+
+Am folosit **Gemini** și **ChatGPT** și separat de aplicație, ca tool-uri de verificare și rafinare. După ce Codex genera o variantă de implementare, foloseam uneori Gemini sau ChatGPT pentru un al doilea punct de vedere: dacă structura unui agent era logică, dacă promptul era prea vag, dacă un mesaj de eroare era clar sau dacă o explicație afișată în UI era ușor de înțeles. De exemplu, la fact-checking am verificat mai multe variante de prompt-uri și reguli de interpretare, pentru că primele rezultate erau fie prea permisive, fie prea dure cu afirmațiile care nu aveau suficiente surse.
+
+AI-ul a fost folosit și pentru debugging. Când apăreau erori în integrarea dintre frontend și backend, trimiteam către Codex mesajele de eroare, structura payload-ului și comportamentul observat. Așa am ajustat modelele Pydantic, tipurile TypeScript, conversia scorurilor, tratarea cazurilor în care un agent nu returnează rezultat și afișarea detaliilor în cardurile din interfață. În loc să schimbăm manual fiecare componentă, ceream AI-ului să urmărească fluxul complet: input în frontend, request către API, procesare în backend, răspuns JSON și randare în UI.
+
+Un alt loc în care AI-ul a ajutat mult a fost lucrul cu URL-uri. Aplicația permite verificarea unui URL, nu doar a unui text introdus manual. Pentru asta, Codex a ajutat la integrarea extragerii textului din pagini web, la curățarea și filtrarea conținutului și la limitarea textului trimis mai departe către agenți. Aici a fost important să tratăm cazuri reale: pagini fără text util, conținut prea lung, caractere care pot strica răspunsurile JSON sau erori de descărcare.
+
+Pentru partea de interfață, Codex a generat și ajustat componentele principale: pagina de verificare, cardurile pentru agenți, dashboard-ul cu istoricul analizelor și afișarea detaliilor pentru fiecare agent. Am folosit AI-ul și pentru mici decizii de UX, cum ar fi ce informații să apară imediat în rezultat și ce informații să fie ascunse în detaliile agentului, ca pagina să nu fie aglomerată.
+
+AI-ul a fost util și la testare. Am folosit Codex și Gemini pentru a propune exemple de texte care ar trebui să producă rezultate diferite: texte foarte uniforme, texte cu greșeli naturale, afirmații factuale ușor de verificat și afirmații inventate. Aceste exemple ne-au ajutat să observăm mai repede când un agent era prea încrezător sau când explicațiile afișate utilizatorului nu erau suficient de clare.
+
+Am folosit AI și pentru documentație. Diagramele de arhitectură, cazuri de utilizare, clase, stare și workflow au fost făcute cu ajutorul Codex, pe baza structurii reale a proiectului. În același timp, am revizuit manual diagramele, ca să nu apară componente inexistente sau relații care nu se regăsesc în aplicație.
+
+Un aspect important este că nu am tratat codul generat de AI ca fiind automat corect. După fiecare schimbare am verificat aplicația, am comparat răspunsurile agenților cu ce ne așteptam să se întâmple și am ajustat prompt-urile sau fallback-urile unde era nevoie. În special la agenții AI, rezultatele nu sunt deterministe în același fel ca o funcție clasică, deci am încercat să avem validări, scoruri limitate la intervale clare și mesaje explicative pentru utilizator.
+
+În concluzie, AI-ul a fost folosit în două moduri diferite în CheckWise. Pe de o parte, a fost instrumentul principal de dezvoltare: Codex pentru implementare, ChatGPT și Gemini pentru verificări, debugging și îmbunătățiri. Pe de altă parte, AI-ul face parte din produsul final: agenții locali prin Ollama, Gemini pentru interpretare factuală și Tavily pentru căutarea surselor. Pentru noi, partea cea mai utilă a fost lucrul iterativ: AI-ul genera rapid o soluție, iar noi o testam, o corectam și o adaptam până când se potrivea cu proiectul.
