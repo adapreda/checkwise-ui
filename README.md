@@ -1,73 +1,122 @@
 # CheckWise
+CheckWise is a multi-agent framework designed for high-precision content forensics and automated text verification.
+By utilizing a hybrid architecture, the platform combines real-time cloud-based web grounding with deep local statistical analysis to dissect text for credibility, structural integrity, and origin.
 
-Multi-agent framework for high-precision content forensics. Uses a hybrid architecture of cloud-based web grounding and local statistical analysis to detect machine-generated patterns, rhythmic monotony, and factual hallucinations.
+## Key Capabilities
 
-## Statistical Agent
+ * Generative & Synthetic Pattern Detection: Uncovers machine-generated structures, tracking rhythmic monotony, repetitive syntax, and typical AI-authored signatures.
+ * Factual Grounding & Hallucination Auditing: Deploys a team of specialized, coordinated agents—including Fact-Checking, Grammatical, and Statistical units—to cross-reference statements against live web databases, isolating factual hallucinations.
+ * Smart URL Processing & Extraction: Seamlessly ingests and sanitizes raw articles, reports, or text files directly via URL extraction to deliver immediate, multi-layered credibility scores and highly detailed reasoning analytics.
 
-The repository now includes a Python statistical agent in [`checkwise_stats/`](./checkwise_stats) and a minimal backend API in [`backend/`](./backend). The intended application path is now:
+## [App demo](https://github.com/AndraRaco/App-Receipt-Scanner/blob/master/Docs/app_test.mp4)
 
-1. frontend sends a statistical question and dataset to `/api/statistics/analyze`
-2. FastAPI backend receives the request
-3. backend calls the LangGraph statistical agent
-4. frontend renders the returned answer and structured results inside the existing checker page
+## Requirements
 
-### What it doess
+* Backend: Python 3.12+ (packages in requirements-statistical-agent.txt), SQLite (checkwise.db).
+* Frontend: Node.js v20+ & npm (React with Vite).
+* Testing: Playwright (requires npx playwright install --with-deps).
 
-- Accepts a user question plus a pandas `DataFrame` or file-backed dataset
-- Uses LangGraph with these nodes:
-  - `parse_request`
-  - `inspect_data`
-  - `select_method`
-  - `run_analysis`
-  - `explain_results`
-- Uses `ChatOllama(model="gpt-oss:20b", base_url="http://localhost:11434", temperature=0)`
-- Uses the LLM only for intent detection and explanation
-- Runs deterministic Python code for descriptive statistics, Welch t-tests, and chi-square tests
+## Quick Start
 
-### Install Python dependencies
+Create a virtual environment, activate it, and install the required dependencies:
+```
+# Create virtual environment
+python -m venv venv
 
-```bash
+# Activate on Windows (CMD)
+call venv\Scripts\activate
+# Activate on Windows (PowerShell)
+# .\venv\Scripts\Activate.ps1
+# Activate on macOS/Linux
+# source venv/bin/activate
+
+# Install dependencies
+pip install --upgrade pip
 pip install -r requirements-statistical-agent.txt
+
 ```
 
-### Run the full app integration
+Install the Node.js packages in a separate terminal:
+```
+npm install
+```
+Start both services in separate terminal sessions:
+```
+# Ensure venv is active
+python -m uvicorn backend.app:app --reload --port 8000
+```
 
-```bash
-pip install -r requirements-statistical-agent.txt
-npm run backend
+```
 npm run dev
 ```
+## Describing the app - (non-tehnical description - user stories, backlog creation, features list, design description, behavior description)
 
-The frontend runs on `http://localhost:8080` and proxies `/api` requests to the Python backend on `http://localhost:8000`.
+### 1. User stories
+https://docs.google.com/document/d/1O0QkMZ_vKr_x_rvjXHyJ5c-q4CBUVyEVc0pRYqqXhHk/edit?tab=t.0
 
-### Optional CLI testing
+### 2. Backlog Creation
 
-```bash
-python -m checkwise_stats.cli --question "Describe the age column" --data path/to/data.csv --show-state
+We monitorized our backlog creation using Trello. It can be found [here](https://trello.com/b/fLciePHL/receipt-scanner).
+
+![](https://github.com/adapreda/CheckWise/blob/main/pictures/backlog1.png)
+![](https://github.com/adapreda/CheckWise/blob/main/pictures/backlog2.png)
+
+### 3. Features list
+
+* Automated URL Text Extraction: Ingest and sanitize raw text from any webpage using high-performance scraping.
+* Multi-Agent Evaluation: Coordinate specialized Fact-Checking, Grammatical, and Statistical agents to evaluate credibility.
+* AI Content Forensics: Analyze linguistic patterns, syntax, and rhythmic monotony to identify synthetic (machine-generated) text.
+* Factual Hallucination Auditing: Cross-reference extracted claims with live data to flag discrepancies and hallucinations.
+* Multi-Layered Scoring System: Generate an intuitive, overall credibility score backed by granular analytical details.
+* Interactive Dashboard: Seamlessly track verification history, visualize agent feedback, and review detailed reasoning.
+* Comprehensive Testing Pipeline: Automated end-to-end user flow testing with Playwright alongside backend verification via Pytest.
+
+### 4. App's behaviour description
+Basically, the user can either opt for *pasting raw text* or *providing a URL* to be verified. If they choose to analyze a URL, the system will use a high-performance web scraper to *extract and clean the text content* from the source webpage. Either way, the platform dispatches the text into a *multi-agent evaluation pipeline*.
+
+Within this pipeline, specialized coordinate agents—specifically the *Fact-Checking Agent*, the *Grammatical Agent*, and the *Statistical Agent*—work concurrently. The statistical engine *detects synthetic patterns, repetitive syntax, and rhythmic monotony* to identify if the text is AI-generated, while the fact-checking engine *cross-references claims against live web databases* to spot factual hallucinations.
+
+Once the analysis is finalized, an *overall credibility score* is dynamically generated and displayed on the screen. Alongside this score, the user is presented with a detailed, interactive report containing *granular agent breakdowns, highlighted text snippets, and reasoning analytics*. The user can then explore the flags, inspect specific warnings, or clear the current analysis to start a new verification session.
+
+
+### 5. UML Diagrams, Workflows, Components Arhitecture
+It can be found [here](https://github.com/adapreda/CheckWise/blob/main/docs/ai-tools-report.md)
+
+## Source control
+
+**Branches**: https://github.com/adapreda/CheckWise/branches
+
+- **branch branch-ada** -  contains statistical agent;<br>
+- **branch alina** - contains database remastering and switch to ollama3.1:8b;<br>
+- **branch marius** - contains fact-checing agent;<br>
+- **branch fullagent** -  contains fact-checking agent clone;<br>
+- **branch branch_2** -  contains code that allows the user to select an image from the gallery or to take a picture which will be scanned. The scanner is programmed to extract the name of the product and its price;<br>
+- **branch url-processing** - contains the code for URL extraction and processing;<br>
+- **branch fabi** - contains Gramatical Agent, UML diagrams, and AI usage report<br>
+
+
+**Commits**: https://github.com/adapreda/CheckWise/commits
+
+
+## CI/CD Pipeline and Automated tests
+The project features an automated testing and continuous integration/continuous deployment (CI/CD) system configured using GitHub Actions.
+
+### 1. Automated Testing
+* **Backend (Pytest)**: Unit tests (e.g., `backend/tests/test_health.py`) verify API health using `TestClient`. Run with `pytest backend/tests`.
+* **Frontend (Playwright):** Test (e.g., `tests/login.spec.ts`) simulate a real user accessing  `http://localhost:8080/login`, entering credentials, and verifying redirection to `/checker`.
+
+### 2. GitHub Actions (Pipeline)
+Configuration is managed via files in `.github/workflows/`:
+* **CI (ci1.yml):** Runs automatically on every `push` or `pull_request` to `main/develop`. Installs dependencies, runs pytest and Playwright to prevent bugs.
+* **CD (cd.yml):** Runs exclusively on push to main. Validates the code, builds the final production version (`npm run build`), and generates an artifact (`application-release`) containing everything needed for deployment.
+
+### 3.Local Execution
+Before `pushing`, make sure tests pass locally:
 ```
+# Backend
+pytest backend/tests
 
-The CLI remains available for local testing only. It is no longer the main integration path for the app.
-
-### End-to-end test
-
-1. Start Ollama and confirm `gpt-oss:20b` is available on `http://localhost:11434`
-2. Start the backend with `npm run backend`
-3. Start the frontend with `npm run dev`
-4. Sign in through the existing auth page
-5. On the checker page, use the new Statistical Agent panel
-6. Try one of the suggested questions such as `Compare score between the control and treatment groups.`
-
-## CI/CD Pipeline
-
-This repository includes a simple GitHub Actions CI/CD setup for the MDS pipeline requirement.
-
-The CI workflow is located in `.github/workflows/ci.yml`. It runs on every push and pull request targeting `main` or `develop`. The workflow checks out the repository, sets up Python 3.12, installs the backend dependencies from `requirements-statistical-agent.txt`, and runs the backend tests with `pytest backend/tests`. It also sets up Node.js 20, installs the frontend dependencies with `npm ci`, and builds the Vite frontend with `npm run build`.
-
-The CD workflow is located in `.github/workflows/cd.yml`. It runs on every push to `main`. The workflow repeats the backend validation, builds the frontend, creates a release folder, and uploads it as a GitHub Actions artifact named `application-release`.
-
-For the university demo, this satisfies the MDS CI/CD requirement because the project automatically validates backend tests and frontend build on code changes, and it produces a downloadable delivery artifact from the `main` branch .
-
-
-
-COME ON
+# Frontend E2E
+npx playwright test tests/login.spec.ts
+```
 
