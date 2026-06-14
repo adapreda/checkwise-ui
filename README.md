@@ -10,6 +10,9 @@ By utilizing a hybrid architecture, the platform combines real-time cloud-based 
 
 ## [App demo](https://github.com/AndraRaco/App-Receipt-Scanner/blob/master/Docs/app_test.mp4)
 
+Check out our live demo!
+https://www.youtube.com/watch?v=k4lSecqAQCA
+
 ## Requirements
 
 * Backend: Python 3.12+ (packages in requirements-statistical-agent.txt), SQLite (checkwise.db).
